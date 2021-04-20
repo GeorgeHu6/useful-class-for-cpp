@@ -1,7 +1,7 @@
 # usefulClassForCpp
 
 #### 介绍
-自己写的STL里没有的使用轮子类，作为备忘供以后使用与参考。
+自己写的STL里没有的实用轮子类，作为备忘供以后使用与参考。
 
 #### 软件架构
 - HighPrecisionNumber类，继承自vector<int>
