@@ -22,92 +22,124 @@ HighPrecisionNumber::HighPrecisionNumber():vector<int>(1, 0)
 //HighPrecisionNumber plus HighPrecisionNumber
 HighPrecisionNumber HighPrecisionNumber::operator+(HighPrecisionNumber other)
 {
+    //flag is true if sign is the different, else false.
+    if (other == 0)
+        return *this;
+    else if ((*this) == 0)
+        return other;
+
+    bool flag=this->sign^other.sign;
+    HighPrecisionNumber abs_x, abs_y;
+    abs_x.setNumber(*this, true);
+    abs_y.setNumber(other, true);
+
+    if (flag)
+    {
+        if (this->sign)
+            return abs_x-abs_y;
+        else
+            return abs_y-abs_x;
+    }
     int max_length = max(other.length, this->length);
     if (other.length < max_length)
         other.resize(max_length, 0);
     else if (this->length < max_length)
         this->resize(max_length, 0);
 
-    vector<int> ans(max_length+1, 0);
+    HighPrecisionNumber ans;
+    ans.resize(max_length+1, 0);
+
     for (int i = 0; i < max_length; i++)
     {
-        ans[i] += ((*this)[i]+other[i])%10;
-        ans[i+1] += ((*this)[i]+other[i])/10;
+        ans[i] += (abs_x[i]+abs_y[i])%10;
+        ans[i+1] += (abs_x[i]+abs_y[i])/10;
     }
+
+    ans.sign = other.sign;
 
     while (max_length > 1 && ans[max_length] == 0)
         max_length--;
 
     this->resize(this->length);
     ans.resize(max_length+1);
+    ans.length = max_length+1;
 
-    return HighPrecisionNumber(ans);
+    return ans;
 }
 
 HighPrecisionNumber HighPrecisionNumber::operator+(int other)
 {
-    int num_len=0, other_copy=other;
-    vector<int> oth;
+    HighPrecisionNumber oth, ans;
+    oth.setNumber(other, other >= 0);
 
-    while (other_copy > 0)
-    {
-        num_len++;
-        other_copy /= 10;
-    }
-    while (other > 0)
-    {
-        oth.push_back(other % 10);
-        other /= 10;
-    }
+    ans = (*this)+oth;
 
-    HighPrecisionNumber high_oth(oth);
-
-    return (*this)+high_oth;
+    return ans;
 }
 
 HighPrecisionNumber HighPrecisionNumber::operator-(int other)
 {
     HighPrecisionNumber other_number;
-    other_number.setNumber(other);
+    other_number.setNumber(other, other >= 0);
 
     return (*this)-other_number;
 }
 
 HighPrecisionNumber HighPrecisionNumber::operator-(HighPrecisionNumber other)
 {
-    int max_length;
-    max_length = max(other.length, this->length);
+    bool flag=this->sign^other.sign;
     HighPrecisionNumber ans;
-    ans.resize(max_length+1, 0);
+    HighPrecisionNumber abs_x, abs_y;
 
-    if (other < (*this))
+    if ((*this)==other)
     {
-        other.resize(max_length, 0);
-        for (int i = 0; i < max_length; i++)
-        {
-            ans[i] += 10 + (*this)[i] - other[i];
-            ans[i+1] += ans[i]/10 - 1;
-            ans[i] %= 10;
-        }
-        ans.sign = true;
+        ans.setNumber(0);
+        return ans;
     }
-    else if (other > (*this))
+
+    if (this->sign && !other.sign)
     {
-        this->resize(max_length, 0);
-        for (int i = 0; i < max_length; i++)
-        {
-            ans[i] += 10 + other[i] - (*this)[i];
-            ans[i+1] += ans[i]/10 - 1;
-            ans[i] %= 10;
-        }
-        this->resize(this->length);
+        abs_x.setNumber(*this, true);
+        abs_y.setNumber(other, true);
+        return abs_x+abs_y;
+    }
+    else if (!this->sign && other.sign)
+    {
+        abs_x.setNumber(*this, true);
+        abs_y.setNumber(other, true);
+        ans = abs_x + abs_y;
+        ans.sign = false;
+        return ans;
+    }
+
+    int max_length=max(other.length, this->length);
+    HighPrecisionNumber *bigger, *smaller;
+    abs_x.setNumber(*this, true);
+    abs_y.setNumber(other, true);
+
+    if (abs_x < abs_y)
+    {
+        smaller = &abs_x;
+        bigger = &abs_y;
         ans.sign = false;
     }
     else
     {
-        ans.setNumber(0);
+        bigger = &abs_x;
+        smaller = &abs_y;
         ans.sign = true;
-        return ans;
+    }
+
+    ans.resize(max_length+1, 0);
+
+    (*smaller).resize(max_length, 0);
+    (*bigger).resize(max_length, 0);
+
+    for (int i = 0; i < max_length; i++)
+    {
+        ans[i] += 10 + (*bigger)[i] - (*smaller)[i];
+        ans[i+1] += ans[i]/10 - 1;
+        ans[i] %= 10;
     }
 
     while (max_length > 0 && ans[max_length] == 0)
@@ -121,7 +153,7 @@ HighPrecisionNumber HighPrecisionNumber::operator-(HighPrecisionNumber other)
 
 HighPrecisionNumber HighPrecisionNumber::operator*(int other)
 {
-    int jw=0, num_length=0, factor=other;
+    int jw=0, num_length=0, factor=other >= 0 ? other:-other;
     int max_length;
     while (factor > 0)
     {
@@ -130,7 +162,11 @@ HighPrecisionNumber HighPrecisionNumber::operator*(int other)
     }
 
     max_length = this->length + num_length;
-    vector<int> ans(max_length, 0);
+    HighPrecisionNumber ans;
+    ans.resize(max_length, 0);
+    ans.assign(max_length, 0);
+    ans.length = max_length;
+
     this->resize(max_length, 0);
 
     for (int i = 0; i < max_length; i++)
@@ -141,11 +177,13 @@ HighPrecisionNumber HighPrecisionNumber::operator*(int other)
     }
 
     this->resize(this->length);
-    while (max_length > 1 && ans[max_length] == 0)
+    while (max_length > 1 && ans[max_length-1] == 0)
         max_length--;
     ans.resize(max_length+1);
+    ans.length = max_length;
+    ans.sign = !(this->sign^(other>=0));
 
-    return HighPrecisionNumber(ans);
+    return ans;
 }
 
 HighPrecisionNumber HighPrecisionNumber::operator*(HighPrecisionNumber other)
@@ -153,12 +191,16 @@ HighPrecisionNumber HighPrecisionNumber::operator*(HighPrecisionNumber other)
     int max_length= this->length + other.length;
     HighPrecisionNumber ans;
     ans.resize(max_length, 0);
+    ans.assign(max_length, 0);
+    ans.length = max_length;
 
     for (int i = 0; i < other.getLength(); i++)
     {
         int j = i;
         HighPrecisionNumber tmp;
-        tmp.resize(i+this->length+1, 0);
+        tmp.resize(ans.length, 0);
+        tmp.assign(ans.length, 0);
+        tmp.length = ans.length;
         tmp = (*this)*other[i];
         while (j > 0)
         {
@@ -173,13 +215,14 @@ HighPrecisionNumber HighPrecisionNumber::operator*(HighPrecisionNumber other)
         max_length--;
     ans.resize(max_length+1);
     ans.length = max_length + 1;
+    ans.sign = !(this->sign^other.sign);
 
     return ans;
 }
 
 HighPrecisionNumber HighPrecisionNumber::operator/(int other)
 {
-    int x=0, max_length, other_copy=other, other_len=0;
+    int x=0, max_length, other_len=0;
     HighPrecisionNumber other_number;
     other_number.setNumber(other);
 
@@ -213,7 +256,8 @@ HighPrecisionNumber HighPrecisionNumber::operator/(int other)
 
     ans.resize(max_length);
     ans.length = max_length;
-    ans.sign = !((other > 0)^((*this).sign));
+    if (!(ans == 0))
+        ans.sign = !(this->sign^(other >= 0));
 
     return ans;
 }
@@ -270,7 +314,8 @@ HighPrecisionNumber HighPrecisionNumber::operator/(HighPrecisionNumber other)
         max_length--;
     ans.resize(max_length);
     ans.length = max_length;
-    ans.sign = !(this->sign^other.sign);
+    if (!(ans == 0))
+        ans.sign = !(this->sign^other.sign);
 
     return ans;
 }
@@ -285,9 +330,19 @@ void HighPrecisionNumber::show()
 
 int HighPrecisionNumber::getLength() const { return this->length; }
 
-void HighPrecisionNumber::setNumber(int x)
+void HighPrecisionNumber::setNumber(HighPrecisionNumber &t, bool flag)
 {
-    int x_copy=x, len=0;
+    this->resize(t.length, 0);
+    this->assign(t.begin(), t.end());
+    this->length = t.length;
+    this->sign = flag;
+}
+
+void HighPrecisionNumber::setNumber(int x, bool flag)
+{
+    int len=0, x_copy;
+    x_copy = x >= 0 ? x:-x;
+    this->sign = flag;
     if (x == 0)
     {
         this->resize(1);
@@ -303,10 +358,11 @@ void HighPrecisionNumber::setNumber(int x)
         }
         this->resize(len);
         this->length = len;
+        x_copy = x >= 0 ? x:-x;
         for (int i = 0; i < len; i++)
         {
-            (*this)[i] = x % 10;
-            x /= 10;
+            (*this)[i] = x_copy % 10;
+            x_copy /= 10;
         }
     }
 }
@@ -314,18 +370,30 @@ void HighPrecisionNumber::setNumber(int x)
 
 bool HighPrecisionNumber::operator<(HighPrecisionNumber &other)
 {
+    //flag set to true if sign is the same, else is false.
+    bool flag;
+    flag = !(this->sign^other.sign);
+
+    if (!flag)
+    {
+        if (!this->sign && other.sign)
+            return true;
+        else
+            return false;
+    }
+
     if (this->length > other.length)
-        return false;
+        return !flag;
     else if (this->length < other.length)
-        return true;
+        return flag;
     else
     {
         for (int i = this->length-1; i >= 0; i--)
         {
             if ((*this)[i] > other[i])
-                return false;
+                return !flag;
             else if ((*this)[i] < other[i])
-                return true;
+                return flag;
         }
         return false;
     }
@@ -334,7 +402,7 @@ bool HighPrecisionNumber::operator<(HighPrecisionNumber &other)
 bool HighPrecisionNumber::operator<(int other)
 {
     HighPrecisionNumber other_num;
-    other_num.setNumber(other);
+    other_num.setNumber(other, other >= 0);
 
     return (*this)<other_num;
 }
@@ -350,14 +418,14 @@ bool HighPrecisionNumber::operator>(HighPrecisionNumber &other)
 bool HighPrecisionNumber::operator>(int other)
 {
     HighPrecisionNumber other_num;
-    other_num.setNumber(other);
+    other_num.setNumber(other, other >= 0);
 
     return (*this)>other_num;
 }
 
 bool HighPrecisionNumber::operator==(HighPrecisionNumber &other)
 {
-    if (this->length == other.length)
+    if (this->length == other.length && this->sign == other.sign)
     {
         for (int i = this->length-1; i >= 0; i--)
         {
@@ -373,7 +441,7 @@ bool HighPrecisionNumber::operator==(HighPrecisionNumber &other)
 bool HighPrecisionNumber::operator==(int other)
 {
     HighPrecisionNumber other_number;
-    other_number.setNumber(other);
+    other_number.setNumber(other, other >= 0);
 
     return other_number==(*this);
 }

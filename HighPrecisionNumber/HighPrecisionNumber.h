@@ -22,7 +22,8 @@ private:
     bool sign;//false for negative, true for positive or zero
 public:
     HighPrecisionNumber(vector<int> &x, bool sign=true);
-    void setNumber(int x);
+    void setNumber(int x, bool flag=true);
+    void setNumber(HighPrecisionNumber &t, bool flag);
     HighPrecisionNumber();
     HighPrecisionNumber operator+(HighPrecisionNumber other);
     HighPrecisionNumber operator+(int other);
