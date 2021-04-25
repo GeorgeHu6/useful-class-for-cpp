@@ -41,23 +41,30 @@ HighPrecisionNumber HighPrecisionNumber::operator+(HighPrecisionNumber other)
             return abs_y-abs_x;
     }
     int max_length = max(other.length, this->length);
-    if (other.length < max_length)
-        other.resize(max_length, 0);
-    else if (this->length < max_length)
-        this->resize(max_length, 0);
+    if (abs_y.length < max_length)
+    {
+        abs_y.resize(max_length, 0);
+        abs_y.length = max_length;
+    }
+    else if (abs_x.length < max_length)
+    {
+        abs_x.resize(max_length, 0);
+        abs_x.length = max_length;
+    }
 
     HighPrecisionNumber ans;
     ans.resize(max_length+1, 0);
+    ans.length = max_length + 1;
 
     for (int i = 0; i < max_length; i++)
     {
-        ans[i] += (abs_x[i]+abs_y[i])%10;
-        ans[i+1] += (abs_x[i]+abs_y[i])/10;
+        ans[i+1] += (ans[i]+abs_x[i]+abs_y[i])/10;
+        ans[i] = (ans[i]+abs_x[i]+abs_y[i])%10;
     }
 
     ans.sign = other.sign;
 
-    while (max_length > 1 && ans[max_length] == 0)
+    while (max_length > 1 && ans[max_length-1] == 0)
         max_length--;
 
     this->resize(this->length);
@@ -190,9 +197,9 @@ HighPrecisionNumber HighPrecisionNumber::operator*(HighPrecisionNumber other)
 {
     int max_length= this->length + other.length;
     HighPrecisionNumber ans;
-    ans.resize(max_length, 0);
-    ans.assign(max_length, 0);
-    ans.length = max_length;
+    ans.resize(max_length+1, 0);
+    ans.assign(max_length+1, 0);
+    ans.length = max_length+1;
 
     for (int i = 0; i < other.getLength(); i++)
     {
